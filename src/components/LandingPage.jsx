@@ -14,7 +14,8 @@ import {
   CheckCircle,
   FileText,
   AlertCircle,
-  Loader2
+  Loader2,
+  UserCircle
 } from 'lucide-react';
 import { TimetableContext } from '../context/TimetableContext';
 
@@ -213,16 +214,6 @@ export const UploadSection = () => {
   );
 };
 
-// --- Sub-component: FeatureCard ---
-const FeatureCard = ({ icon, title, description, color = "bg-indigo-50" }) => (
-  <div className="bg-white p-12 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-100/30 transition-all duration-500 group hover:-translate-y-3">
-    <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center mb-10 group-hover:rotate-6 transition-transform duration-500 shadow-inner`}>
-      {icon}
-    </div>
-    <h3 className="text-2xl font-black text-slate-900 mb-6">{title}</h3>
-    <p className="text-slate-500 font-medium leading-relaxed text-lg">{description}</p>
-  </div>
-);
 
 // --- Main Component: LandingPage ---
 const LandingPage = () => {
@@ -246,25 +237,27 @@ const LandingPage = () => {
     <div className="min-h-screen bg-[#F8F9FC] text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden font-['Inter',_sans-serif]">
       {/* Navigation */}
       <nav className="w-full py-8 px-8 max-w-7xl mx-auto flex justify-between items-center bg-transparent relative z-20">
+        {/* Logo Section */}
         <div className="flex items-center gap-3 font-bold text-indigo-600 text-2xl">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100 transition-transform hover:scale-105 active:scale-95 duration-300">
             <Calendar className="w-6 h-6" />
           </div>
           <span className="tracking-tight">Timetablely</span>
         </div>
-        <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Features</a>
-          <a href="#about" className="text-slate-600 hover:text-indigo-600 font-medium transition-colors">About</a>
+
+        {/* Future Login Section */}
+        <div className="flex items-center">
           <button 
-            onClick={() => navigate('/app')}
-            className="px-6 py-2.5 bg-slate-900 text-white rounded-full font-bold hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-slate-200"
+            onClick={() => console.log('Login clicked - future implementation')}
+            className="group flex items-center gap-2.5 px-5 py-2.5 bg-white border border-slate-100 rounded-full font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-100/40 transition-all duration-300 active:scale-95"
           >
-            Launch App
+            <UserCircle className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+            <span>Login</span>
           </button>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 pt-20 pb-24 grid lg:grid-cols-2 gap-20 items-center relative">
+      <main className="max-w-7xl mx-auto px-6 pt-20 pb-12 grid lg:grid-cols-2 gap-20 items-center relative">
         <section className="flex flex-col gap-10">
           <div className="inline-flex items-center px-5 py-2 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-bold w-fit animate-in fade-in slide-in-from-bottom-4 duration-700">
             <Sparkles className="w-4 h-4 mr-2" />
@@ -342,95 +335,12 @@ const LandingPage = () => {
         </section>
       </main>
 
-      <section id="upload-zone" className="py-24 bg-white relative">
+      <section id="upload-zone" className="py-12 bg-white relative">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#F8F9FC] to-transparent"></div>
         <div className="max-w-7xl mx-auto px-6">
           <UploadSection />
         </div>
       </section>
-
-      <section id="features" className="py-32 bg-[#F8F9FC]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className="text-4xl lg:text-5xl font-black mb-6 tracking-tight text-slate-900 border-b-4 border-indigo-100 w-fit mx-auto pb-4">Experience Organizing 2.0</h2>
-            <p className="text-slate-500 text-xl font-medium">Powerful features built to handle the complexities of academic scheduling without the headache.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <FeatureCard 
-              icon={<Upload className="h-8 w-8 text-indigo-600" />}
-              title="One-Click Import"
-              description="Simply upload your .docx timetable and let our engine handle the parsing and structure automatically."
-            />
-            <FeatureCard 
-              icon={<BarChart3 className="h-8 w-8 text-emerald-600" />}
-              title="Faculty Insights"
-              description="Get detailed schedules for every faculty member with a single click. No more searching through giant spreadsheets."
-              color="bg-emerald-50"
-            />
-            <FeatureCard 
-              icon={<Clock className="h-8 w-8 text-violet-600" />}
-              title="Free Slots Finder"
-              description="Instantly identify common free slots for meetings, substitute classes, or department syncs."
-              color="bg-violet-50"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section id="about" className="py-32 bg-white overflow-hidden relative">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row items-center gap-24">
-            <div className="flex-1 relative group">
-              <div className="relative z-10 rounded-[3rem] overflow-hidden shadow-2xl transition-transform duration-700 group-hover:scale-[1.02]">
-                 <img 
-                   src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80" 
-                   alt="Team working on scheduling" 
-                   className="w-full h-full object-cover aspect-[4/3]"
-                 />
-              </div>
-              <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-indigo-600 rounded-[3rem] -z-10 animate-pulse delay-700 opacity-20"></div>
-              <div className="absolute -top-10 -left-10 w-48 h-48 bg-emerald-500 rounded-[3rem] -z-10 opacity-10"></div>
-            </div>
-            <div className="flex-1">
-              <h2 className="text-4xl lg:text-5xl font-black mb-10 tracking-tight leading-tight">Designed for <span className="text-indigo-600">Educational Excellence</span></h2>
-              <div className="space-y-8">
-                <p className="text-slate-600 text-xl leading-relaxed font-medium">
-                  Timetablely was born out of the frustration shared by educators worldwide. We realized that while education is evolving, the tools used to manage it often lag behind.
-                </p>
-                <div className="grid gap-6">
-                  {[
-                    { title: "Privacy First", text: "Your data is parsed locally and never stored on our servers.", icon: <ShieldCheck className="h-6 w-6 text-emerald-600" /> },
-                    { title: "Team Collaboration", text: "Share insights across departments effortlessly.", icon: <Sparkles className="h-6 w-6 text-indigo-600" /> }
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-start space-x-5 p-6 rounded-3xl border border-slate-100 hover:border-indigo-100 transition-colors">
-                      <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-50 mt-1">
-                        {item.icon}
-                      </div>
-                      <div>
-                        <h4 className="font-black text-slate-900 text-lg mb-1">{item.title}</h4>
-                        <p className="text-slate-500 font-medium leading-relaxed">{item.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="w-full py-16 px-8 text-center bg-[#F8F9FC] border-t border-slate-100">
-        <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
-          <div className="flex items-center gap-2 font-bold text-slate-900 text-xl">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
-              <Calendar className="w-5 h-5" />
-            </div>
-            <span>Timetablely</span>
-          </div>
-          <p className="text-slate-400 font-medium italic">© 2026 Timetablely Analyzer. All rights reserved. Crafted for excellence in education.</p>
-        </div>
-      </footer>
     </div>
   );
 };
