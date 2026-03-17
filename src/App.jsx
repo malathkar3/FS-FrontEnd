@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
-import UploadSection from './components/UploadSection';
+import { UploadSection } from './components/LandingPage';
 import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
 import { TimetableContext } from './context/TimetableContext';
