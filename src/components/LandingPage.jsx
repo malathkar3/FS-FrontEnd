@@ -65,11 +65,11 @@ export const UploadSection = () => {
 
   const handleUpload = async () => {
     if (!selectedFile) return;
+    console.log("Starting upload for:", selectedFile.name);
     const success = await uploadFile(selectedFile);
     if (success) {
-      if (window.location.pathname === '/') {
-        navigate('/app');
-      }
+      console.log("Upload successful, navigating to faculty list");
+      navigate('/faculty');
     }
   };
 
@@ -222,7 +222,8 @@ const LandingPage = () => {
 
   useEffect(() => {
     if (isUploaded) {
-      navigate('/app');
+      console.log("Timetable already uploaded, redirecting to faculty...");
+      navigate('/faculty');
     }
   }, [isUploaded, navigate]);
 

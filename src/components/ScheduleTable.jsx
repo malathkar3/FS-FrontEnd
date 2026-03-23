@@ -1,89 +1,120 @@
 import React from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, Calendar, CheckCircle } from 'lucide-react';
 
-const ScheduleTable = ({ schedule }) => {
-  // Transform schedule array into a mapping of day -> period -> subject if it's an array
-  let scheduleMap = {};
-  
+const ScheduleTable = ({ schedule, freeSlots }) => {
+  // Debug log before rendering
+  console.log("Rendering ScheduleTable with schedule:", schedule, "and freeSlots:", freeSlots);
+
+  // Pre-process schedule and freeSlots into a unified day -> time -> { type, content } map
+  const unifiedMap = {};
+
+  // Track all unique days and times found in BOTH datasets
+  const daysSet = new Set();
+  const timesSet = new Set();
+
+  // 1. Process Schedule (Classes)
   if (Array.isArray(schedule)) {
-    schedule.forEach(entry => {
-      const { day, period, subject } = entry;
-      if (!scheduleMap[day]) scheduleMap[day] = {};
-      scheduleMap[day][period] = subject;
+    schedule.forEach(item => {
+      const { day, time, subject } = item;
+      if (!unifiedMap[day]) unifiedMap[day] = {};
+      unifiedMap[day][time] = { type: 'class', content: subject };
+      daysSet.add(day);
+      timesSet.add(time);
     });
-  } else {
-    // If it's already an object, use it directly
-    scheduleMap = schedule;
   }
 
-  if (!scheduleMap || Object.keys(scheduleMap).length === 0) {
+  // 2. Process Free Slots
+  if (Array.isArray(freeSlots)) {
+    freeSlots.forEach(item => {
+      const { day, time } = item;
+      if (!unifiedMap[day]) unifiedMap[day] = {};
+      // Only set as FREE if not already occupied by a class (in case of data overlap)
+      if (!unifiedMap[day][time]) {
+        unifiedMap[day][time] = { type: 'free', content: 'FREE' };
+        daysSet.add(day);
+        timesSet.add(time);
+      }
+    });
+  }
+
+  if (daysSet.size === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center text-gray-500 bg-white rounded-2xl shadow-sm border border-dashed border-gray-300 animate-in fade-in duration-500">
-        <Clock className="h-12 w-12 text-gray-300 mb-4 animate-pulse" />
-        <p className="text-lg font-bold text-gray-700">No active classes scheduled</p>
-        <p className="text-sm">This faculty member has a clear schedule for this period.</p>
+      <div className="flex flex-col items-center justify-center p-16 text-center text-gray-400 bg-white rounded-2xl animate-in fade-in duration-500">
+        <Clock className="h-16 w-16 text-gray-100 mb-6" />
+        <p className="text-2xl font-black text-gray-800 tracking-tight">Schedule is Clear</p>
+        <p className="text-gray-400 font-medium max-w-xs mt-2">No data found in the uploaded document for this faculty.</p>
       </div>
     );
   }
 
-  const days = Object.keys(scheduleMap);
-  // Sort days based on standard week order
-  const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  days.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
-
-  const slotsSet = new Set();
-  days.forEach(day => {
-    Object.keys(scheduleMap[day]).forEach(slot => slotsSet.add(slot));
-  });
+  const dayOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
   
-  // Sort slots (P1, P2, ...)
-  const slots = Array.from(slotsSet).sort((a, b) => {
-    const aNum = parseInt(a.replace(/\D/g, '')) || 0;
-    const bNum = parseInt(b.replace(/\D/g, '')) || 0;
-    return aNum - bNum;
+  // Sort days based on dayOrder
+  const sortedDays = Array.from(daysSet).sort((a, b) => {
+    const idxA = dayOrder.indexOf(a.toUpperCase());
+    const idxB = dayOrder.indexOf(b.toUpperCase());
+    return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+  });
+
+  // Unique chronologically sorted times for columns
+  const allTimes = Array.from(timesSet).sort((a, b) => {
+    const getMinutes = (t) => {
+      const start = t.split('-')[0].trim();
+      let [h, m] = start.split(':').map(Number);
+      // Heuristic: If hour is 1-7, assume PM (add 12h). 12 is Noon, 8-11 are AM.
+      if (h < 8) h += 12;
+      return h * 60 + m;
+    };
+    return getMinutes(a) - getMinutes(b);
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden fade-in">
-      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-        <h3 className="text-lg leading-6 font-semibold text-gray-900">Weekly Schedule</h3>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 w-32 border-r border-gray-200 shadow-sm">
-                Day \ Slot
+    <div className="w-full overflow-x-auto scrollbar-hide px-1 pb-6">
+      <div className="min-w-full inline-block align-middle">
+        <table className="w-full border-collapse table-auto">
+          <thead>
+            <tr className="bg-slate-50/50">
+              <th className="px-5 py-6 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 bg-slate-50 z-20 w-32 min-w-[120px]">
+                Day \ Time
               </th>
-              {slots.map(slot => (
-                <th key={slot} scope="col" className="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[120px]">
-                  {slot}
+              {allTimes.map(time => (
+                <th key={time} className="px-4 py-6 text-center text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 min-w-[140px]">
+                  {time}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {days.map((day, dIdx) => (
-              <tr key={day} className={dIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50 hover:bg-indigo-50/30 transition-colors'}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 sticky left-0 border-r border-gray-200 z-10 bg-inherit shadow-sm">
+          <tbody className="divide-y divide-slate-50">
+            {sortedDays.map((day) => (
+              <tr key={day} className="group hover:bg-slate-50/30 transition-colors duration-300">
+                <td className="px-5 py-8 whitespace-nowrap text-sm font-black text-slate-800 border-r border-slate-50 bg-white group-hover:bg-slate-50/30">
                   {day}
                 </td>
-                {slots.map(slot => {
-                  const val = scheduleMap[day][slot];
-                  const hasClass = val && val.trim() !== '' && val.toLowerCase() !== 'free';
+                {allTimes.map(time => {
+                  const data = unifiedMap[day]?.[time];
+                  
+                  if (!data) {
+                    return (
+                      <td key={time} className="px-4 py-3 text-center border-r border-slate-50 last:border-r-0 italic text-slate-200">
+                        -
+                      </td>
+                    );
+                  }
+
+                  const isClass = data.type === 'class';
                   
                   return (
-                    <td 
-                      key={slot} 
-                      className={`px-4 py-4 text-sm text-center border-l border-gray-100 transition-colors ${
-                        hasClass 
-                          ? 'bg-indigo-100 text-indigo-800 font-medium' 
-                          : 'text-gray-400'
-                      }`}
-                    >
-                      <div className="flex items-center justify-center w-full h-full min-h-[2.5rem] rounded">
-                        {hasClass ? val : '-'}
-                      </div>
+                    <td key={time} className="px-3 py-4 text-center border-r border-slate-50 last:border-r-0">
+                      {isClass ? (
+                        <div className="mx-auto w-full max-w-[160px] px-3 py-4 rounded-2xl bg-indigo-600 text-white text-[11px] font-bold shadow-lg shadow-indigo-100 flex items-center justify-center break-words min-h-[52px] leading-relaxed transform hover:scale-[1.03] transition-transform">
+                          {data.content}
+                        </div>
+                      ) : (
+                        <div className="mx-auto w-full max-w-[130px] px-3 py-3 rounded-xl bg-emerald-50 border border-emerald-100/40 text-emerald-600 text-[10px] font-black tracking-widest flex items-center justify-center gap-2 uppercase opacity-90 group-hover:opacity-100 transition-opacity">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          {data.content}
+                        </div>
+                      )}
                     </td>
                   );
                 })}
