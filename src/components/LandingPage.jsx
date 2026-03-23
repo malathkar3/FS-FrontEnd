@@ -1,11 +1,11 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Calendar, 
-  Upload, 
-  ArrowRight, 
-  Sparkles, 
-  ShieldCheck, 
+import {
+  Calendar,
+  Upload,
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
   BarChart3,
   CheckCircle2,
   Zap,
@@ -96,17 +96,17 @@ export const UploadSection = () => {
           <label
             htmlFor="file-upload"
             className={`flex flex-col items-center justify-center w-full h-56 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 ${dragActive
-                ? 'border-indigo-500 bg-indigo-50/60 scale-[1.01]'
-                : selectedFile
-                  ? 'border-emerald-400 bg-emerald-50/30'
-                  : 'border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50 hover:border-indigo-400'
+              ? 'border-indigo-500 bg-indigo-50/60 scale-[1.01]'
+              : selectedFile
+                ? 'border-emerald-400 bg-emerald-50/30'
+                : 'border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50 hover:border-indigo-400'
               }`}
           >
             <div className="flex flex-col items-center justify-center px-8 text-center">
               <div
                 className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md mb-4 transition-all duration-300 ${selectedFile
-                    ? 'bg-emerald-100 text-emerald-600 scale-110'
-                    : 'bg-white text-indigo-500 group-hover:scale-110 group-hover:rotate-6'
+                  ? 'bg-emerald-100 text-emerald-600 scale-110'
+                  : 'bg-white text-indigo-500 group-hover:scale-110 group-hover:rotate-6'
                   }`}
               >
                 {selectedFile ? (
@@ -181,10 +181,10 @@ export const UploadSection = () => {
           onClick={handleUpload}
           disabled={loading || !selectedFile}
           className={`w-full mt-8 py-4 px-6 flex items-center justify-center gap-3 font-bold text-base rounded-xl shadow-lg transition-all active:scale-[0.98] ${loading
-              ? 'bg-indigo-400 text-white cursor-wait'
-              : !selectedFile
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
-                : 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-indigo-200 hover:shadow-indigo-300 hover:-translate-y-0.5'
+            ? 'bg-indigo-400 text-white cursor-wait'
+            : !selectedFile
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+              : 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-indigo-200 hover:shadow-indigo-300 hover:-translate-y-0.5'
             }`}
         >
           {loading ? (
@@ -248,7 +248,7 @@ const LandingPage = () => {
 
         {/* Future Login Section */}
         <div className="flex items-center">
-          <button 
+          <button
             onClick={() => console.log('Login clicked - future implementation')}
             className="group flex items-center gap-2.5 px-5 py-2.5 bg-white border border-slate-100 rounded-full font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-100/40 transition-all duration-300 active:scale-95"
           >
@@ -264,7 +264,7 @@ const LandingPage = () => {
             <Zap className="w-4 h-4 mr-2" />
             ✦ Timetable Parsing Engine
           </div>
-          
+
           <div className="flex flex-col gap-6">
             <h1 className="text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
               Understand Your <span className="text-indigo-600">Timetable</span> Instantly
@@ -286,51 +286,12 @@ const LandingPage = () => {
               </span>
             ))}
           </div>
-
-          <button 
-            onClick={handleGetStarted}
-            className="flex items-center gap-3 text-indigo-600 font-bold group mt-4 animate-bounce hover:scale-105 transition-transform"
-          >
-            <ArrowRight className="w-6 h-6 rotate-90" />
-            <span className="text-lg">Upload your file below to get started</span>
-          </button>
         </section>
 
-        <section className="relative h-[600px] flex items-center justify-center animate-in fade-in zoom-in duration-1000 delay-200">
-          <div className="w-full h-full relative">
-            {/* Profile decoration removed as per user request */}
-
-            <div className="absolute bottom-10 left-12 bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-[320px] transition-all hover:scale-105">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Weekly Density</p>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="h-12 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200"></div>
-                <div className="h-12 bg-indigo-300 rounded-xl"></div>
-                <div className="h-12 bg-indigo-100 rounded-xl"></div>
-                <div className="h-12 bg-indigo-400 rounded-xl"></div>
-                <div className="h-12 bg-indigo-200 rounded-xl"></div>
-                <div className="h-12 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200"></div>
-                <div className="h-12 bg-indigo-100 rounded-xl"></div>
-                <div className="h-12 bg-indigo-500 rounded-xl shadow-md shadow-indigo-100"></div>
-                <div className="h-12 bg-indigo-50 rounded-xl border-2 border-dashed border-indigo-200 flex items-center justify-center">
-                  <div className="w-4 h-4 rounded-full bg-indigo-200/50"></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute top-1/2 -right-4 bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-2xl w-64 flex flex-col items-center gap-4 border border-white/50 transition-all hover:scale-110">
-              <div className="text-6xl font-black text-indigo-600 bg-clip-text">12</div>
-              <p className="text-sm font-bold text-slate-500 text-center leading-relaxed">Faculty Members<br/>Successfully Loaded</p>
-            </div>
-          </div>
+        <section className="flex items-center justify-center animate-in fade-in zoom-in duration-1000 delay-200 py-16">
+          <UploadSection />
         </section>
       </main>
-
-      <section id="upload-zone" className="py-12 bg-white relative">
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#F8F9FC] to-transparent"></div>
-        <div className="max-w-7xl mx-auto px-6">
-          <UploadSection />
-        </div>
-      </section>
     </div>
   );
 };

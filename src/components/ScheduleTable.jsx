@@ -68,58 +68,74 @@ const ScheduleTable = ({ schedule, freeSlots }) => {
     return getMinutes(a) - getMinutes(b);
   });
 
-  return (
-    <div className="w-full overflow-x-auto scrollbar-hide px-1 pb-6">
-      <div className="min-w-full inline-block align-middle">
-        <table className="w-full border-collapse table-auto">
+    const dayMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const currentDay = dayMap[new Date().getDay()];
+
+    return (
+    <div className="w-full px-1 pb-6 overflow-hidden">
+      <div className="w-full">
+        <table className="w-full border-collapse table-fixed">
           <thead>
             <tr className="bg-slate-50/50">
-              <th className="px-5 py-6 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 bg-slate-50 z-20 w-32 min-w-[120px]">
+              <th className="px-3 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 bg-slate-50 z-20 w-28">
                 Day \ Time
               </th>
               {allTimes.map(time => (
-                <th key={time} className="px-4 py-6 text-center text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 min-w-[140px]">
+                <th key={time} className="px-1 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                   {time}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {sortedDays.map((day) => (
-              <tr key={day} className="group hover:bg-slate-50/30 transition-colors duration-300">
-                <td className="px-5 py-8 whitespace-nowrap text-sm font-black text-slate-800 border-r border-slate-50 bg-white group-hover:bg-slate-50/30">
-                  {day}
-                </td>
-                {allTimes.map(time => {
-                  const data = unifiedMap[day]?.[time];
-                  
-                  if (!data) {
+            {sortedDays.map((day) => {
+              const isToday = day.toUpperCase() === currentDay;
+              
+              return (
+                <tr key={day} className={`group transition-colors duration-300 ${isToday ? 'bg-indigo-50/40 ring-1 ring-inset ring-indigo-500/10' : 'hover:bg-slate-50/30'}`}>
+                  <td className={`px-5 py-8 whitespace-nowrap border-r border-slate-50 sticky left-0 z-10 transition-colors ${isToday ? 'bg-indigo-50/40' : 'bg-white group-hover:bg-slate-50/30'}`}>
+                    <div className="flex flex-col gap-1">
+                      <span className={`text-sm font-black ${isToday ? 'text-indigo-600' : 'text-slate-800'}`}>
+                        {day}
+                      </span>
+                      {isToday && (
+                        <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest animate-pulse">
+                          Today
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  {allTimes.map(time => {
+                    const data = unifiedMap[day]?.[time];
+                    
+                    if (!data) {
+                      return (
+                        <td key={time} className="px-4 py-3 text-center border-r border-slate-50 last:border-r-0 italic text-slate-200">
+                          -
+                        </td>
+                      );
+                    }
+
+                    const isClass = data.type === 'class';
+                    
                     return (
-                      <td key={time} className="px-4 py-3 text-center border-r border-slate-50 last:border-r-0 italic text-slate-200">
-                        -
+                      <td key={time} className="px-3 py-4 text-center border-r border-slate-50 last:border-r-0">
+                        {isClass ? (
+                          <div className="mx-auto w-full max-w-[160px] px-3 py-4 rounded-2xl bg-indigo-600 text-white text-[11px] font-bold shadow-lg shadow-indigo-100 flex items-center justify-center break-words min-h-[52px] leading-relaxed transform hover:scale-[1.03] transition-transform">
+                            {data.content}
+                          </div>
+                        ) : (
+                          <div className="mx-auto w-full max-w-[130px] px-3 py-3 rounded-xl bg-emerald-50 border border-emerald-100/40 text-emerald-600 text-[10px] font-black tracking-widest flex items-center justify-center gap-2 uppercase opacity-90 group-hover:opacity-100 transition-opacity">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            {data.content}
+                          </div>
+                        )}
                       </td>
                     );
-                  }
-
-                  const isClass = data.type === 'class';
-                  
-                  return (
-                    <td key={time} className="px-3 py-4 text-center border-r border-slate-50 last:border-r-0">
-                      {isClass ? (
-                        <div className="mx-auto w-full max-w-[160px] px-3 py-4 rounded-2xl bg-indigo-600 text-white text-[11px] font-bold shadow-lg shadow-indigo-100 flex items-center justify-center break-words min-h-[52px] leading-relaxed transform hover:scale-[1.03] transition-transform">
-                          {data.content}
-                        </div>
-                      ) : (
-                        <div className="mx-auto w-full max-w-[130px] px-3 py-3 rounded-xl bg-emerald-50 border border-emerald-100/40 text-emerald-600 text-[10px] font-black tracking-widest flex items-center justify-center gap-2 uppercase opacity-90 group-hover:opacity-100 transition-opacity">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          {data.content}
-                        </div>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
