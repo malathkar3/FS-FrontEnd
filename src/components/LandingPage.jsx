@@ -261,8 +261,8 @@ const LandingPage = () => {
       <main className="max-w-7xl mx-auto px-6 pt-20 pb-12 grid lg:grid-cols-2 gap-20 items-center relative">
         <section className="flex flex-col gap-10">
           <div className="inline-flex items-center px-5 py-2 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-bold w-fit animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <Sparkles className="w-4 h-4 mr-2" />
-            ✦ Smart Timetable Analyzer
+            <Zap className="w-4 h-4 mr-2" />
+            ✦ Timetable Parsing Engine
           </div>
           
           <div className="flex flex-col gap-6">
@@ -270,7 +270,7 @@ const LandingPage = () => {
               Understand Your <span className="text-indigo-600">Timetable</span> Instantly
             </h1>
             <p className="text-xl text-slate-600 max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-700 delay-200">
-              Upload your college timetable in .docx format. Our AI identifies faculty schedules, detects free slots, and generates a clean dashboard for your entire department.
+              Upload your college timetable in .docx format. Our engine automatically parses faculty schedules, detects free slots, and generates a clean dashboard for your entire department.
             </p>
           </div>
 
@@ -298,18 +298,7 @@ const LandingPage = () => {
 
         <section className="relative h-[600px] flex items-center justify-center animate-in fade-in zoom-in duration-1000 delay-200">
           <div className="w-full h-full relative">
-            <div className="absolute top-10 left-0 bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-2xl border-l-[6px] border-l-indigo-600 w-80 animate-pulse duration-[3000ms] hover:animate-none group cursor-pointer transition-all hover:scale-105">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl font-black">DS</div>
-                <div>
-                  <p className="font-black text-slate-800 text-lg">Dr. Sharma</p>
-                  <p className="text-sm text-green-600 font-bold flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-                    3 free slots today
-                  </p>
-                </div>
-              </div>
-            </div>
+            {/* Profile decoration removed as per user request */}
 
             <div className="absolute bottom-10 left-12 bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-[320px] transition-all hover:scale-105">
               <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Weekly Density</p>
