@@ -1,5 +1,5 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Calendar,
   Upload,
@@ -15,7 +15,8 @@ import {
   FileText,
   AlertCircle,
   Loader2,
-  UserCircle
+  UserCircle,
+  GraduationCap
 } from 'lucide-react';
 import { TimetableContext } from '../context/TimetableContext';
 
@@ -247,14 +248,21 @@ const LandingPage = () => {
         </div>
 
         {/* Future Login Section */}
-        <div className="flex items-center">
-          <button
-            onClick={() => console.log('Login clicked - future implementation')}
-            className="group flex items-center gap-2.5 px-5 py-2.5 bg-white border border-slate-100 rounded-full font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-100/40 transition-all duration-300 active:scale-95"
+        <div className="flex items-center gap-4">
+          <Link
+            to="/admin/auth"
+            className="group flex items-center gap-2.5 px-6 py-2.5 bg-indigo-600 text-white rounded-full font-bold text-sm hover:bg-indigo-700 hover:shadow-xl hover:shadow-indigo-200 transition-all duration-300 active:scale-95"
           >
-            <UserCircle className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
-            <span>Login</span>
-          </button>
+            <ShieldCheck className="w-4 h-4" />
+            <span>Admin</span>
+          </Link>
+          <Link
+            to="/faculty/auth"
+            className="group flex items-center gap-2.5 px-6 py-2.5 bg-white border border-slate-200 rounded-full font-bold text-slate-700 hover:text-emerald-600 hover:border-emerald-100 hover:shadow-xl hover:shadow-emerald-100/40 transition-all duration-300 active:scale-95"
+          >
+            <GraduationCap className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+            <span>Faculty</span>
+          </Link>
         </div>
       </nav>
 

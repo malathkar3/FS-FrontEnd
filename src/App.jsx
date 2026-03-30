@@ -4,7 +4,13 @@ import Header from './components/Header';
 import LandingPage from './components/LandingPage';
 import FacultyList from './components/FacultyList';
 import FacultyDetails from './components/FacultyDetails';
+import Dashboard from './pages/Dashboard';
+import AdminAuth from './pages/AdminAuth';
+import FacultyAuth from './pages/FacultyAuth';
+import FacultyDashboard from './pages/FacultyDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 import { TimetableProvider } from './context/TimetableContext';
+import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
 const MainLayout = ({ children }) => {
@@ -28,30 +34,51 @@ const MainLayout = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Landing Page Route */}
-        <Route path="/" element={<LandingPage />} />
-        
-        {/* Dashboard Routes wrapped in header content */}
-        <Route path="/faculty" element={
-          <MainLayout>
-            <FacultyList />
-          </MainLayout>
-        } />
-        
-        <Route path="/faculty/:name" element={
-          <MainLayout>
-            <FacultyDetails />
-          </MainLayout>
-        } />
-        
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <TimetableProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/admin/auth" element={<AdminAuth />} />
+            <Route path="/faculty/auth" element={<FacultyAuth />} />
+            
+            <Route path="/faculty-dashboard" element={
+              <ProtectedRoute role="faculty">
+                <FacultyDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* Protected Dashboard Routes */}
+            <Route path="/faculty" element={
+              <MainLayout>
+                <FacultyList />
+              </MainLayout>
+            } />
+            
+            <Route path="/faculty/:name" element={
+              <MainLayout>
+                <FacultyDetails />
+              </MainLayout>
+            } />
+
+            <Route path="/dashboard" element={
+              <ProtectedRoute role="admin">
+                <MainLayout>
+                  <Dashboard />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </TimetableProvider>
+    </AuthProvider>
   );
 }
 
 export default App;
+
 

@@ -4,8 +4,9 @@ import { TimetableContext } from '../context/TimetableContext';
 import { ArrowLeft, Sparkles, Calendar, User, Clock, AlertCircle } from 'lucide-react';
 import ScheduleTable from './ScheduleTable';
 
-const FacultyDetails = () => {
-  const { name } = useParams();
+const FacultyDetails = ({ overrideName }) => {
+  const { name: paramName } = useParams();
+  const name = overrideName || paramName;
   const navigate = useNavigate();
   const { timetableData, loading, isUploaded } = useContext(TimetableContext);
 
@@ -56,13 +57,15 @@ const FacultyDetails = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <button
-        onClick={() => navigate('/faculty')}
-        className="inline-flex items-center text-sm font-black text-indigo-600 hover:text-indigo-800 transition-all bg-white px-5 py-3 rounded-2xl border border-indigo-50 shadow-sm hover:shadow-xl shadow-indigo-100/30 mb-10 group active:scale-95"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1.5 transition-transform duration-300" />
-        Back to Dashboard
-      </button>
+      {!overrideName && (
+        <button
+          onClick={() => navigate('/faculty')}
+          className="inline-flex items-center text-sm font-black text-indigo-600 hover:text-indigo-800 transition-all bg-white px-5 py-3 rounded-2xl border border-indigo-50 shadow-sm hover:shadow-xl shadow-indigo-100/30 mb-10 group active:scale-95"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1.5 transition-transform duration-300" />
+          Back to Dashboard
+        </button>
+      )}
 
       <div className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-600 to-indigo-800 rounded-[2.5rem] p-10 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between mb-12 gap-8">
         <div className="absolute top-0 right-0 w-96 h-96 -mr-48 -mt-48 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
