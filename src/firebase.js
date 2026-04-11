@@ -1,8 +1,9 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
+// Your actual Firebase configuration for fs-project-46fa0
 const firebaseConfig = {
   apiKey: "AIzaSyBurF7nnLQIRo4ubJm1x5pTmLmHuiVdxfw",
   authDomain: "fs-project-46fa0.firebaseapp.com",
@@ -15,9 +16,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
-export { auth, db, analytics };
+// Initialize Services
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const analytics = getAnalytics(app);
+export const googleProvider = new GoogleAuthProvider();
+
 export default app;

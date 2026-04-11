@@ -9,7 +9,7 @@ export const TimetableProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isUploaded, setIsUploaded] = useState(false);
 
-  const uploadFile = async (file) => {
+  const uploadFile = React.useCallback(async (file) => {
     if (!file.name.endsWith('.docx')) {
       setError("Invalid file format. Please upload a .docx file.");
       return false;
@@ -37,26 +37,26 @@ export const TimetableProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const clearData = () => {
+  const clearData = React.useCallback(() => {
     setTimetableData({});
     setIsUploaded(false);
     setError(null);
-  };
+  }, []);
+
+  const value = React.useMemo(() => ({
+    timetableData,
+    loading,
+    error,
+    isUploaded,
+    uploadFile,
+    clearData,
+    setError
+  }), [timetableData, loading, error, isUploaded, uploadFile, clearData]);
 
   return (
-    <TimetableContext.Provider
-      value={{
-        timetableData,
-        loading,
-        error,
-        isUploaded,
-        uploadFile,
-        clearData,
-        setError
-      }}
-    >
+    <TimetableContext.Provider value={value}>
       {children}
     </TimetableContext.Provider>
   );

@@ -1,11 +1,12 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TimetableContext } from '../context/TimetableContext';
-import { User, Search, RefreshCw, Plus, BarChart2, Star, Clock, Sparkles } from 'lucide-react';
+import { User, Search, RefreshCw, BarChart2, Star, Clock, Sparkles } from 'lucide-react';
 import FacultyPieChart from './FacultyPieChart';
 import ScheduleTable from './ScheduleTable';
+import UploadSection from './UploadSection';
 
-const FacultyList = () => {
+const FacultyList = React.memo(() => {
   const { timetableData, loading, clearData } = useContext(TimetableContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState(null);
@@ -13,20 +14,22 @@ const FacultyList = () => {
 
   console.log("Rendering FacultyList with data:", timetableData);
 
-  const facultyNames = Object.keys(timetableData || {});
+  const facultyNames = React.useMemo(() => Object.keys(timetableData || {}), [timetableData]);
   
-  const filteredFaculty = facultyNames.filter(name =>
-    name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFaculty = React.useMemo(() => 
+    facultyNames.filter(name =>
+      name.toLowerCase().includes(searchQuery.toLowerCase())
+    ), [facultyNames, searchQuery]);
   
-  const workloadData = filteredFaculty.map(name => {
-    const faculty = timetableData[name];
-    const schedule = Array.isArray(faculty) ? faculty : (faculty?.schedule || []);
-    return {
-      name,
-      value: schedule.length
-    };
-  }).filter(item => item.value > 0);
+  const workloadData = React.useMemo(() => 
+    filteredFaculty.map(name => {
+      const faculty = timetableData[name];
+      const schedule = Array.isArray(faculty) ? faculty : (faculty?.schedule || []);
+      return {
+        name,
+        value: schedule.length
+      };
+    }).filter(item => item.value > 0), [filteredFaculty, timetableData]);
 
   // Auto-select first faculty if none selected
   React.useEffect(() => {
@@ -35,14 +38,22 @@ const FacultyList = () => {
     }
   }, [workloadData, selectedFaculty]);
 
-  const selectedFacultyData = selectedFaculty ? timetableData[selectedFaculty] : null;
-  const selectedSchedule = Array.isArray(selectedFacultyData) ? selectedFacultyData : selectedFacultyData?.schedule;
-  const selectedFreeSlots = selectedFacultyData?.freeSlots || [];
+  const selectedFacultyData = React.useMemo(() => 
+    selectedFaculty ? timetableData[selectedFaculty] : null
+  , [selectedFaculty, timetableData]);
+  
+  const selectedSchedule = React.useMemo(() => 
+    Array.isArray(selectedFacultyData) ? selectedFacultyData : selectedFacultyData?.schedule
+  , [selectedFacultyData]);
 
-  const handleReset = () => {
+  const selectedFreeSlots = React.useMemo(() => 
+    selectedFacultyData?.freeSlots || []
+  , [selectedFacultyData]);
+
+  const handleReset = React.useCallback(() => {
     clearData();
     navigate('/');
-  };
+  }, [clearData, navigate]);
 
   if (loading) {
     return (
@@ -55,19 +66,23 @@ const FacultyList = () => {
 
   if (facultyNames.length === 0) {
     return (
-      <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-2xl mx-auto px-6">
-        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-          <User className="w-8 h-8 text-gray-300" />
+      <div className="max-w-4xl mx-auto px-6 py-20 animate-in fade-in zoom-in-95 duration-700">
+        <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-indigo-500/5 p-16 flex flex-col items-center text-center">
+          <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-indigo-600 mb-8 border border-indigo-100 shadow-inner">
+            <BarChart2 className="w-12 h-12" />
+          </div>
+          <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Data Not Loaded</h3>
+          <p className="text-slate-500 max-w-md mx-auto text-lg font-medium leading-relaxed mb-10">
+            Faculties details are not loaded yet. Please <span className="text-indigo-600 font-bold">upload the master timetable</span> from the home page first to view detailed analysis.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:bg-indigo-600 hover:shadow-2xl transition-all active:scale-95"
+          >
+            <RefreshCw className="w-5 h-5" />
+            <span>Go to Home Page</span>
+          </button>
         </div>
-        <h3 className="text-xl font-bold text-gray-800 mb-2">No Data Available</h3>
-        <p className="text-gray-500 mb-8">Please upload a timetable file to view faculty schedules.</p>
-        <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Upload Timetable
-        </button>
       </div>
     );
   }
@@ -231,6 +246,6 @@ const FacultyList = () => {
       </div>
     </div>
   );
-};
+});
 
 export default FacultyList;

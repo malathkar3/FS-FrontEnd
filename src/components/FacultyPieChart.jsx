@@ -49,7 +49,7 @@ const renderActiveShape = (props) => {
   );
 };
 
-const FacultyPieChart = ({ data, onFacultySelect, selectedFaculty }) => {
+const FacultyPieChart = React.memo(({ data, onFacultySelect, selectedFaculty }) => {
   const [activeIndex, setActiveIndex] = React.useState(-1);
 
   if (!data || data.length === 0) {
@@ -84,7 +84,7 @@ const FacultyPieChart = ({ data, onFacultySelect, selectedFaculty }) => {
   };
 
   return (
-    <div className="w-full h-full min-h-[480px] relative">
+    <div className="w-full relative" style={{ height: '450px', minHeight: '450px' }}>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Scale</span>
          <span className="text-3xl font-black text-indigo-600">
@@ -92,7 +92,7 @@ const FacultyPieChart = ({ data, onFacultySelect, selectedFaculty }) => {
          </span>
          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Sessions</span>
       </div>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" debounce={1}>
         <PieChart>
           <Pie
             activeIndex={currentActiveIndex >= 0 ? currentActiveIndex : activeIndex}
@@ -155,6 +155,6 @@ const FacultyPieChart = ({ data, onFacultySelect, selectedFaculty }) => {
       </ResponsiveContainer>
     </div>
   );
-};
+});
 
 export default FacultyPieChart;

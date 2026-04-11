@@ -14,28 +14,61 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Step 1: Fetch faculty names
-        const faculties = await fetchFacultyList();
+        // Step 1: Fetch faculty data
+        const response = await fetchFacultyList();
+        
+        // Safe check for array vs object (handling { success: true, data: [...] } pattern)
+        let faculties = [];
+        if (Array.isArray(response)) {
+          faculties = response;
+        } else if (response && typeof response === 'object') {
+          if (Array.isArray(response.data)) {
+             // If response has a data property that is an array, use it (standard pattern)
+             faculties = response.data;
+          } else if (response.faculties && Array.isArray(response.faculties)) {
+             // Alternative property name
+             faculties = response.faculties;
+          } else {
+            // If it's a generic object, convert it to an array but filter out non-string/non-object garbage
+            const values = Object.values(response);
+            faculties = values.filter(val => typeof val === 'string' || (val && typeof val === 'object' && !Array.isArray(val)));
+            console.warn('API returned a generic object for faculty list. Filtered and converted to array.', response);
+          }
+        } else {
+          console.error('Unexpected API response format for faculty list:', response);
+        }
+
         setFacultyList(faculties);
 
         // Step 2: Fetch timetable for each faculty to calculate workload
-        // Using Promise.all for parallel fetching
-        const workloads = await Promise.all(
-          faculties.map(async (name) => {
-            try {
-              const schedule = await fetchFacultyTimetable(name);
-              return {
-                name,
-                value: Array.isArray(schedule) ? schedule.length : 0,
-              };
-            } catch (err) {
-              console.error(`Failed to fetch timetable for ${name}:`, err);
-              return { name, value: 0 };
-            }
-          })
-        );
+        // Only attempt to map if faculties is an array with items
+        const workloads = faculties.length > 0 
+          ? await Promise.all(
+              faculties.map(async (item) => {
+                // Determine the identifier (handle both string names and objects)
+                const facultyIdentifier = typeof item === 'string' ? item : (item.name || item.id);
+                
+                if (!facultyIdentifier) {
+                  console.error('Could not determine faculty identifier from item:', item);
+                  return null;
+                }
 
-        setWorkloadData(workloads.filter(w => w.value > 0));
+                try {
+                  const schedule = await fetchFacultyTimetable(facultyIdentifier);
+                  return {
+                    name: facultyIdentifier,
+                    value: Array.isArray(schedule) ? schedule.length : 0,
+                  };
+                } catch (err) {
+                  console.error(`Failed to fetch timetable for ${facultyIdentifier}:`, err);
+                  return { name: facultyIdentifier, value: 0 };
+                }
+              })
+            )
+          : [];
+
+        // Filter out nulls and zero values
+        setWorkloadData(workloads.filter(w => w && w.value > 0));
         setError(null);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
