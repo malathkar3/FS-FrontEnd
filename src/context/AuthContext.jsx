@@ -2,11 +2,10 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
-  signOut,
-  signInWithPopup
+  signOut 
 } from 'firebase/auth';
-import { auth, googleProvider } from '../firebase';
-import apiClient from '../api/timetable.api';
+import { auth } from '../firebase/config';
+import { checkUserRole } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -14,41 +13,46 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [userData, setUserData] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [userRole, setUserRole] = useState(null); // "admin" or "faculty"
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
-  const loginWithEmail = (email, password) => signInWithEmailAndPassword(auth, email, password);
+  const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
   const logout = () => signOut(auth);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setLoading(true);
       setCurrentUser(user);
+      setError(null);
       
       if (user) {
         try {
-          // 1. Get the latest ID token from Firebase
-          const token = await user.getIdToken();
+          // 1. Get Firebase ID token
+          await user.getIdToken();
           
-          // 2. Fetch the verified role and profile from the backend
-          const response = await apiClient.get('/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          if (response.data && response.data.success) {
-            setUserData(response.data);
+          // 2. Fetch role and profile from backend
+          const data = await checkUserRole();
+          
+          if (data && data.role) {
+            setUserRole(data.role);
+            setUserProfile(data); // Store the full profile (includes displayName)
           } else {
-            console.error("Failed to fetch user role from backend", response.data);
-            setUserData(null);
+            console.error("No role returned from backend");
+            setUserRole(null);
+            setUserProfile(null);
+            setError("Access Denied: Role not found.");
           }
-        } catch (error) {
-          console.error("Error verifying user role with backend:", error);
-          setUserData(null);
+        } catch (err) {
+          console.error("Error verifying user role:", err);
+          setUserRole(null);
+          setUserProfile(null);
+          setError("Access Denied: Authentication failed.");
         }
       } else {
-        setUserData(null);
+        setUserRole(null);
+        setUserProfile(null);
       }
       
       setLoading(false);
@@ -59,18 +63,19 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
-    userData, // { success, uid, email, displayName, role, ... }
+    userProfile,
+    userRole,
     loading,
-    loginWithGoogle,
-    loginWithEmail,
+    error,
+    login,
     logout,
-    isAdmin: userData?.role === 'admin',
-    isFaculty: userData?.role === 'faculty'
+    isAdmin: userRole === 'admin',
+    isFaculty: userRole === 'faculty'
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

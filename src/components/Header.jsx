@@ -4,7 +4,6 @@ import {
   Calendar, 
   LayoutDashboard, 
   Users, 
-  Upload, 
   LogOut, 
   Menu, 
   X,
@@ -20,7 +19,7 @@ const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, userData, logout, isAdmin, isFaculty } = useAuth();
+  const { currentUser, userData, logout, isAdmin, isFaculty, userRole } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,11 +39,18 @@ const Header = () => {
   };
 
   const navLinks = [
-    { name: 'Home', path: '/', icon: <Info size={18} /> },
+    { name: 'Home', path: '/', icon: <Info size={18} />, hidden: !isAdmin },
     { name: 'Faculties', path: '/faculty', icon: <Users size={18} />, hidden: !isAdmin },
-    { name: 'Admin Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={18} />, hidden: !isAdmin },
+    { name: 'Admin Dashboard', path: '/admin-dashboard', icon: <LayoutDashboard size={18} />, hidden: !isAdmin },
     { name: 'Faculty Dashboard', path: '/faculty/dashboard', icon: <Calendar size={18} />, hidden: !isFaculty },
   ].filter(link => !link.hidden);
+
+  // Requirement: If on Landing Page (/), show clean header without user info unless verified
+  const isOnLandingPage = location.pathname === '/';
+  const shouldShowAuth = currentUser && (isAdmin || isFaculty) && !isOnLandingPage;
+  // If we are an admin and on landing page, we can show auth to allow access to upload
+  const showAuthOnLanding = currentUser && isAdmin && isOnLandingPage;
+  const isFullyAuthenticated = currentUser && (isAdmin || isFaculty);
 
   return (
     <header className={`sticky top-0 z-50 transition-all duration-500 ${
@@ -68,8 +74,8 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          {currentUser && (
+          {/* Desktop Navigation - Visible if authenticated, and accessible on home page for admins */}
+          {(isFullyAuthenticated && (!isOnLandingPage || isAdmin)) && (
             <nav className="hidden md:flex items-center gap-1.5">
               {navLinks.map((link) => (
                 <Link
@@ -90,7 +96,7 @@ const Header = () => {
 
           {/* Profile / Auth Section */}
           <div className="hidden md:flex items-center gap-4">
-            {currentUser ? (
+            {isFullyAuthenticated && (!isOnLandingPage || isAdmin) ? (
               <div className="relative">
                 <button 
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -108,7 +114,7 @@ const Header = () => {
                       {userData?.displayName || currentUser.displayName || 'User'}
                     </span>
                     <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-tighter mt-0.5">
-                      {userData?.role || 'Member'}
+                      {userRole || 'Member'}
                     </span>
                   </div>
                   <ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
@@ -176,7 +182,7 @@ const Header = () => {
                 {link.name}
               </Link>
             ))}
-            {currentUser ? (
+            {isFullyAuthenticated ? (
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-3 p-4 rounded-2xl bg-rose-50 text-rose-600 font-bold"

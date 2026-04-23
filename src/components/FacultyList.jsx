@@ -96,7 +96,7 @@ const FacultyList = React.memo(() => {
               <div className="p-2.5 bg-indigo-100 rounded-2xl text-indigo-600 shadow-inner">
                 <User className="h-7 w-7" />
               </div>
-              <span className="tracking-tight">Faculty Intelligence</span>
+              <span className="tracking-tight">Faculty Insights</span>
             </h2>
             <p className="text-gray-400 mt-2 font-medium tracking-wide">Synthesized schedule overview for <span className="text-indigo-600 font-black">{facultyNames.length}</span> active members</p>
           </div>

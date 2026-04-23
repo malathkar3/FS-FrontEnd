@@ -4,10 +4,9 @@ import Header from './components/Header';
 import LandingPage from './components/LandingPage';
 import FacultyList from './components/FacultyList';
 import FacultyDetails from './components/FacultyDetails';
-import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import FacultyDashboard from './pages/FacultyDashboard';
 import LoginPage from './pages/LoginPage';
-import Unauthorized from './pages/Unauthorized';
 import { TimetableProvider } from './context/TimetableContext';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -41,27 +40,27 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<MainLayout><LandingPage /></MainLayout>} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
             
-            {/* Compatibility Redirects */}
-            <Route path="/admin/auth" element={<Navigate to="/login" replace />} />
-            <Route path="/faculty/auth" element={<Navigate to="/login" replace />} />
-
             {/* Faculty Only Routes */}
             <Route path="/faculty/dashboard" element={
               <ProtectedRoute role="faculty">
-                <FacultyDashboard />
+                <MainLayout>
+                  <FacultyDashboard />
+                </MainLayout>
               </ProtectedRoute>
             } />
             
             {/* Admin Only Routes */}
-            <Route path="/admin/dashboard" element={
+            <Route path="/admin-dashboard" element={
               <ProtectedRoute role="admin">
                 <MainLayout>
-                  <Dashboard />
+                  <AdminDashboard />
                 </MainLayout>
               </ProtectedRoute>
             } />
+
+            {/* Compatibility route for /admin/dashboard */}
+            <Route path="/admin/dashboard" element={<Navigate to="/admin-dashboard" replace />} />
 
             <Route path="/faculty" element={
               <ProtectedRoute role="admin">
@@ -89,5 +88,3 @@ function App() {
 }
 
 export default App;
-
-

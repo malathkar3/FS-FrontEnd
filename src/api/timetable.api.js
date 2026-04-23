@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { auth } from '../firebase';
+import { auth } from '../firebase/config';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 

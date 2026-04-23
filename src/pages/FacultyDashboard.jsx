@@ -1,20 +1,23 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { TimetableContext } from '../context/TimetableContext';
-import FacultyDetails from '../components/FacultyDetails';
-import { LogOut, User as UserIcon, AlertCircle, ArrowRight, Calendar } from 'lucide-react';
+import ScheduleTable from '../components/ScheduleTable';
+import { LogOut, User as UserIcon, Calendar, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import apiClient from '../services/api';
 
 const FacultyDashboard = () => {
-  const { currentUser, logout, userData } = useAuth();
-  const { timetableData, isUploaded } = useContext(TimetableContext);
+  const { currentUser, userProfile, logout } = useAuth();
+  const { isUploaded } = useContext(TimetableContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isUploaded) {
-      // If no timetable is uploaded, the faculty can't see their schedule
-    }
-  }, [isUploaded]);
+  const [schedule, setSchedule] = useState(null);
+  const [freeSlots, setFreeSlots] = useState([]);
+  const [matchedName, setMatchedName] = useState(null);
+  const [loadingData, setLoadingData] = useState(true);
+  const [error, setError] = useState(null);
+
+  const displayName = userProfile?.displayName || currentUser?.email || 'User';
 
   const handleLogout = async () => {
     try {
@@ -25,119 +28,171 @@ const FacultyDashboard = () => {
     }
   };
 
-  // Robust lookup: identifying the faculty member in the timetable
-  const getLinkedFacultyName = () => {
-    if (!timetableData || Object.keys(timetableData).length === 0) return null;
+  useEffect(() => {
+    const fetchMyTimetable = async () => {
+      setLoadingData(true);
+      setError(null);
+      try {
+        // Backend uses the displayName from Firestore to match the timetable
+        const response = await apiClient.get('/my-timetable');
+        if (response.data.success) {
+          setMatchedName(response.data.matchingName);
+          setSchedule(response.data.data);
 
-    // 1. Try backend displayName (preferred, e.g., "nikhil")
-    const searchName = (userData?.displayName || currentUser?.displayName || "").trim();
-    if (searchName) {
-      // Direct match
-      if (timetableData[searchName]) return searchName;
-      
-      // Case-insensitive match
-      const keys = Object.keys(timetableData);
-      const matchedKey = keys.find(k => k.toLowerCase() === searchName.toLowerCase());
-      if (matchedKey) return matchedKey;
-    }
+          // Also fetch free slots using the matched name
+          try {
+            const freeSlotsRes = await apiClient.get(`/faculty-data/${encodeURIComponent(response.data.matchingName)}/free-slots`);
+            if (freeSlotsRes.data.success) {
+              setFreeSlots(freeSlotsRes.data.data || []);
+            }
+          } catch {
+            setFreeSlots([]);
+          }
+        } else {
+          setError(response.data.message || 'Could not find your timetable.');
+        }
+      } catch (err) {
+        const msg = err.response?.data?.message || 'Failed to load your timetable.';
+        setError(msg);
+      } finally {
+        setLoadingData(false);
+      }
+    };
 
-    // 2. Try email match (if the keys are emails or contain them)
-    const searchEmail = (userData?.email || currentUser?.email || "").trim();
-    if (searchEmail) {
-      const keys = Object.keys(timetableData);
-      const matchedKey = keys.find(k => k.toLowerCase() === searchEmail.toLowerCase());
-      if (matchedKey) return matchedKey;
-    }
+    fetchMyTimetable();
+  }, []);
 
-    return null;
-  };
-
-  const facultyName = getLinkedFacultyName();
-  const facultyExists = !!facultyName;
-  
-  // For error display, determine what we actually tried to use
-  const attemptedIdentifier = userData?.displayName || userData?.email || currentUser?.email || "Unknown Profile";
-
+  // ── No timetable uploaded yet ───────────────────────────────────────────────
   if (!isUploaded) {
-     return (
-       <div className="min-h-screen bg-slate-50 flex flex-col pt-10 px-6">
-         <div className="max-w-4xl mx-auto w-full">
-           <div className="bg-white rounded-[2.5rem] p-12 text-center shadow-xl shadow-slate-200/50 border border-slate-100">
-             <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-8">
-               <AlertCircle className="w-10 h-10 text-amber-500" />
-             </div>
-             <h2 className="text-3xl font-black text-slate-900 mb-4">No Timetable Uploaded</h2>
-             <p className="text-slate-500 text-lg mb-10 leading-relaxed max-w-lg mx-auto font-medium">
-               An administrator needs to upload the master timetable before you can view your personalized schedule.
-             </p>
-             <button
-               onClick={handleLogout}
-               className="px-10 py-4 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all flex items-center gap-3 mx-auto active:scale-95"
-             >
-               <LogOut size={20} />
-               Sign Out
-             </button>
-           </div>
-         </div>
-       </div>
-     );
-  }
-
-  // If we have data but faculty name doesn't match
-  if (isUploaded && !facultyExists) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col pt-10 px-6">
-        <div className="max-w-4xl mx-auto w-full">
-           <div className="bg-white rounded-[2.5rem] p-12 text-center shadow-xl shadow-slate-200/50 border border-slate-100">
-              <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-8">
-                <UserIcon className="text-rose-500 w-12 h-12" />
-              </div>
-              <h2 className="text-4xl font-black text-slate-900 mb-6 tracking-tight">Profile Not Linked</h2>
-              <div className="bg-rose-50/50 rounded-2xl p-6 mb-10 max-w-md mx-auto border border-rose-100">
-                <p className="text-slate-600 text-base leading-relaxed font-medium">
-                  We found the timetable, but your sign-in identity "<span className="font-bold text-slate-900 underline decoration-rose-300 decoration-2 underline-offset-4">{attemptedIdentifier}</span>" doesn't match any record.
-                </p>
-              </div>
-              <p className="text-slate-400 text-sm mb-12 max-w-sm mx-auto font-bold uppercase tracking-widest leading-loose">
-                Please contact technical support to sync your profile name with the master schedule.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                 <button
-                   onClick={handleLogout}
-                   className="w-full sm:w-auto px-10 py-4 bg-white border-2 border-slate-100 text-slate-600 font-black rounded-2xl hover:border-rose-200 hover:text-rose-600 transition-all"
-                 >
-                   Sign Out
-                 </button>
-              </div>
-           </div>
+      <div className="flex flex-col pt-10 animate-in fade-in duration-700">
+        <div className="bg-white rounded-[2.5rem] p-12 text-center shadow-xl shadow-slate-200/50 border border-slate-50">
+          <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-8">
+            <Calendar size={40} className="text-amber-400" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 mb-3">No Timetable Loaded</h2>
+          <p className="text-slate-500 font-medium mb-8 max-w-sm mx-auto">
+            The admin hasn't uploaded the master timetable yet. Please check back later.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-rose-600 transition-all"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
     );
   }
 
-  // If everything is fine, reuse FacultyDetails but with a logout button for convenience
-  return (
-    <div className="min-h-screen bg-[#FDFEFE] pb-20">
-      <div className="max-w-7xl mx-auto px-6 py-8 flex items-center justify-between">
-         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
-               <Calendar size={24} />
-            </div>
-            <div>
-               <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Your Dashboard</h1>
-               <p className="text-xs font-bold text-indigo-500 uppercase tracking-widest mt-2">Personalized Schedule Engine</p>
-            </div>
-         </div>
-         <button
-           onClick={handleLogout}
-           className="flex items-center gap-3 px-8 py-3 bg-white border-2 border-slate-50 text-slate-500 rounded-2xl font-black hover:text-rose-600 hover:border-rose-100 transition-all hover:shadow-xl hover:shadow-rose-100/30"
-         >
-           <LogOut size={18} />
-           <span>Log Out</span>
-         </button>
+  // ── Loading state ────────────────────────────────────────────────────────────
+  if (loadingData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+        <p className="text-slate-400 font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">
+          Fetching your timetable...
+        </p>
       </div>
-      <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
-        <FacultyDetails overrideName={facultyName} />
+    );
+  }
+
+  // ── Identity mismatch / error ────────────────────────────────────────────────
+  if (error || !schedule) {
+    return (
+      <div className="flex flex-col items-center pt-10 animate-in fade-in duration-700">
+        <div className="bg-white rounded-[2.5rem] p-12 text-center shadow-xl border border-slate-50 max-w-lg w-full">
+          <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mx-auto mb-8">
+            <UserIcon size={40} className="text-rose-400" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 mb-4">Identity Mismatch</h2>
+          <div className="bg-rose-50 rounded-2xl p-5 mb-6 text-left">
+            <p className="text-sm text-rose-800 font-semibold leading-relaxed text-center">
+              {error || 'Your profile name does not match any record in the uploaded timetable.'}
+            </p>
+          </div>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-8">
+            Profile name from Firestore: "<span className="text-indigo-500">{displayName}</span>"
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={handleLogout}
+              className="px-8 py-3 bg-rose-600 text-white rounded-2xl font-black text-sm flex items-center gap-2 hover:bg-rose-700 transition-all"
+            >
+              <LogOut size={16} />
+              Sign Out & Switch Account
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Success: show timetable ──────────────────────────────────────────────────
+  return (
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+      {/* Header banner */}
+      <div className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-indigo-800 rounded-[2.5rem] p-10 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 -mr-48 -mt-48 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 flex items-center gap-6">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-3xl font-black text-white tracking-tight leading-none">My Timetable</h1>
+            </div>
+            <p className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.3em] mt-2">Personal Precision Engine</p>
+          </div>
+        </div>
+
+        <div className="relative z-10 flex flex-col items-end gap-3">
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-indigo-500/20 border border-white/10 text-indigo-100 text-[10px] font-black tracking-widest uppercase">
+            <Sparkles className="w-4 h-4 mr-2 text-indigo-200" />
+            Faculty Insights
+          </div>
+          <h2 className="text-2xl font-black text-white">{matchedName}</h2>
+          <div className="flex gap-3 flex-wrap justify-end">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-2xl border border-white/5 font-bold text-sm">
+              <Calendar size={14} className="text-indigo-300" />
+              <span>Full Week Schedule</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-2xl border border-white/5 font-bold text-sm">
+              <UserIcon size={14} className="text-indigo-300" />
+              <span>{freeSlots.length} Free Slots Available</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden lg:block relative z-10">
+          <div className="h-24 w-24 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/20">
+            <UserIcon className="w-12 h-12 text-white" />
+          </div>
+        </div>
+      </div>
+
+      {/* Welcome greeting */}
+      <div className="flex items-center justify-between px-2">
+        <div className="flex items-center gap-2 text-indigo-500">
+          <Sparkles size={16} />
+          <span className="font-black text-sm tracking-wide">Welcome, {displayName}</span>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-5 py-2.5 text-rose-600 hover:bg-rose-50 rounded-2xl transition-colors font-bold text-sm border border-rose-100"
+        >
+          <LogOut size={16} />
+          Sign Out
+        </button>
+      </div>
+
+      {/* Timetable section */}
+      <div className="bg-white rounded-[2.5rem] p-6 lg:p-10 border border-slate-100 shadow-xl shadow-indigo-500/5 overflow-x-auto">
+        <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
+          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+            <Calendar size={20} />
+          </div>
+          Weekly Schedule &amp; Free Slots
+        </h3>
+        <ScheduleTable schedule={schedule} freeSlots={freeSlots} />
       </div>
     </div>
   );
