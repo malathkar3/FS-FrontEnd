@@ -16,6 +16,8 @@ const UploadSection = ({ onUploadSuccess }) => {
   const navigate = useNavigate();
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [semester, setSemester] = useState('');
+  const [section, setSection] = useState('');
   const fileInputRef = useRef(null);
 
   const handleDrag = (e) => {
@@ -56,7 +58,11 @@ const UploadSection = ({ onUploadSuccess }) => {
 
   const handleUpload = async () => {
     if (!selectedFile) return;
-    const success = await uploadFile(selectedFile);
+    if (!semester || !section) {
+      setError('Please provide Semester and Section.');
+      return;
+    }
+    const success = await uploadFile(selectedFile, semester, section);
     if (success) {
       if (onUploadSuccess) {
         onUploadSuccess();
@@ -78,6 +84,30 @@ const UploadSection = ({ onUploadSuccess }) => {
             Upload your college schedule (.docx) and we'll extract every faculty's timetable instantly.
           </p>
         </header>
+
+        {/* Input Fields for Semester and Section */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-1">Semester</label>
+            <input 
+              type="text" 
+              placeholder="e.g. 3"
+              value={semester}
+              onChange={(e) => setSemester(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-1">Section</label>
+            <input 
+              type="text" 
+              placeholder="e.g. A"
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all"
+            />
+          </div>
+        </div>
 
         <div
           className="relative group"

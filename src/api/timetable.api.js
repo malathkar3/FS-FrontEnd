@@ -26,10 +26,12 @@ apiClient.interceptors.request.use(
   }
 );
 
-export const uploadTimetable = async (file) => {
+export const uploadTimetable = async (file, semester, section) => {
   const formData = new FormData();
   formData.append('file', file);
-  // Endpoint updated to /upload-timetable without trailing slash
+  formData.append('semester', semester);
+  formData.append('section', section);
+  
   const response = await apiClient.post('/upload-timetable', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
@@ -57,6 +59,16 @@ export const fetchFacultyFreeSlots = async (name) => {
 export const checkHealth = async () => {
   // Health check remains at the root
   const response = await axios.get('http://localhost:5000/health');
+  return response.data;
+};
+
+export const fetchSections = async () => {
+  const response = await apiClient.get('/faculty-data/sections/all');
+  return response.data;
+};
+
+export const fetchSectionData = async (id) => {
+  const response = await apiClient.get(`/faculty-data/sections/${id}`);
   return response.data;
 };
 

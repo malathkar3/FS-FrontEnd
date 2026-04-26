@@ -7,14 +7,24 @@ import ScheduleTable from './ScheduleTable';
 import UploadSection from './UploadSection';
 
 const FacultyList = React.memo(() => {
-  const { timetableData, loading, clearData } = useContext(TimetableContext);
+  const { timetableData, sections, loading, clearData, loadSession, isUploaded } = useContext(TimetableContext);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSection, setSelectedSection] = useState('all');
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const navigate = useNavigate();
 
-  console.log("Rendering FacultyList with data:", timetableData);
+  console.log("Rendering FacultyList. isUploaded:", isUploaded, "Sections:", sections);
 
-  const facultyNames = React.useMemo(() => Object.keys(timetableData || {}), [timetableData]);
+  const facultyNames = React.useMemo(() => {
+    const allNames = Object.keys(timetableData || {});
+    if (selectedSection === 'all') return allNames;
+    
+    return allNames.filter(name => {
+      const faculty = timetableData[name];
+      const schedule = Array.isArray(faculty) ? faculty : (faculty?.schedule || []);
+      return schedule.some(slot => `sem${slot.semester}_sec${slot.section}` === selectedSection);
+    });
+  }, [timetableData, selectedSection]);
   
   const filteredFaculty = React.useMemo(() => 
     facultyNames.filter(name =>
@@ -24,17 +34,25 @@ const FacultyList = React.memo(() => {
   const workloadData = React.useMemo(() => 
     filteredFaculty.map(name => {
       const faculty = timetableData[name];
-      const schedule = Array.isArray(faculty) ? faculty : (faculty?.schedule || []);
+      let schedule = Array.isArray(faculty) ? faculty : (faculty?.schedule || []);
+      
+      if (selectedSection !== 'all') {
+        schedule = schedule.filter(slot => `sem${slot.semester}_sec${slot.section}` === selectedSection);
+      }
+
       return {
         name,
         value: schedule.length
       };
-    }).filter(item => item.value > 0), [filteredFaculty, timetableData]);
+    }).filter(item => item.value > 0), [filteredFaculty, timetableData, selectedSection]);
 
-  // Auto-select first faculty if none selected
   React.useEffect(() => {
-    if (workloadData.length > 0 && !selectedFaculty) {
-      setSelectedFaculty(workloadData[0].name);
+    if (workloadData.length > 0) {
+      if (!selectedFaculty || !workloadData.some(f => f.name === selectedFaculty)) {
+        setSelectedFaculty(workloadData[0].name);
+      }
+    } else {
+      setSelectedFaculty(null);
     }
   }, [workloadData, selectedFaculty]);
 
@@ -42,9 +60,13 @@ const FacultyList = React.memo(() => {
     selectedFaculty ? timetableData[selectedFaculty] : null
   , [selectedFaculty, timetableData]);
   
-  const selectedSchedule = React.useMemo(() => 
-    Array.isArray(selectedFacultyData) ? selectedFacultyData : selectedFacultyData?.schedule
-  , [selectedFacultyData]);
+  const selectedSchedule = React.useMemo(() => {
+    let schedule = Array.isArray(selectedFacultyData) ? selectedFacultyData : selectedFacultyData?.schedule;
+    if (selectedSection !== 'all' && schedule) {
+      return schedule.filter(slot => `sem${slot.semester}_sec${slot.section}` === selectedSection);
+    }
+    return schedule;
+  }, [selectedFacultyData, selectedSection]);
 
   const selectedFreeSlots = React.useMemo(() => 
     selectedFacultyData?.freeSlots || []
@@ -59,29 +81,63 @@ const FacultyList = React.memo(() => {
     return (
       <div className="flex flex-col justify-center items-center py-20">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-        <p className="text-gray-500 font-medium">Loading faculty members...</p>
+        <p className="text-gray-500 font-medium">Loading session data...</p>
       </div>
     );
   }
 
-  if (facultyNames.length === 0) {
+  // ── Show session picker if nothing is uploaded yet ──────────────────────
+  if (!isUploaded) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-20 animate-in fade-in zoom-in-95 duration-700">
-        <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-indigo-500/5 p-16 flex flex-col items-center text-center">
-          <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-indigo-600 mb-8 border border-indigo-100 shadow-inner">
-            <BarChart2 className="w-12 h-12" />
+      <div className="max-w-6xl mx-auto px-6 py-12 animate-in fade-in zoom-in-95 duration-700">
+        <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl p-12 lg:p-20 text-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+          
+          <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-indigo-600 mx-auto mb-10 border border-indigo-100 shadow-inner">
+            <Sparkles className="w-12 h-12" />
           </div>
-          <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Data Not Loaded</h3>
-          <p className="text-slate-500 max-w-md mx-auto text-lg font-medium leading-relaxed mb-10">
-            Faculties details are not loaded yet. Please <span className="text-indigo-600 font-bold">upload the master timetable</span> from the home page first to view detailed analysis.
+          
+          <h3 className="text-4xl font-black text-slate-900 mb-6 tracking-tight">Saved Timetables Found</h3>
+          <p className="text-slate-500 max-w-lg mx-auto text-lg font-medium leading-relaxed mb-12">
+            The following timetables were found in your Firestore cloud. Choose one to start the analysis engine.
           </p>
-          <button
-            onClick={() => navigate('/')}
-            className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:bg-indigo-600 hover:shadow-2xl transition-all active:scale-95"
-          >
-            <RefreshCw className="w-5 h-5" />
-            <span>Go to Home Page</span>
-          </button>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {sections && sections.filter(id => id.startsWith('sem')).length > 0 ? 
+              sections.filter(id => id.startsWith('sem')).map((id) => (
+                <button
+                  key={id}
+                  onClick={() => loadSession(id)}
+                  className="group relative bg-slate-50 hover:bg-indigo-600 p-8 rounded-[2rem] border border-slate-100 transition-all text-left overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-indigo-200"
+                >
+                  <div className="absolute top-4 right-4 text-slate-200 group-hover:text-white/20 transition-colors">
+                    <Sparkles size={24} />
+                  </div>
+                  <h4 className="text-xs font-black text-indigo-600 group-hover:text-white/70 uppercase tracking-[0.2em] mb-2 transition-colors">Section Instance</h4>
+                  <p className="text-xl font-black text-slate-900 group-hover:text-white transition-colors">
+                    {id.replace('_', ' ').toUpperCase()}
+                  </p>
+                  <div className="mt-6 flex items-center text-[10px] font-black text-slate-400 group-hover:text-white/50 uppercase tracking-widest transition-colors">
+                    <span>Click to Initialize →</span>
+                  </div>
+                </button>
+              )) : (
+                 <div className="col-span-full py-10 text-slate-300 font-bold italic">
+                   No named timetables were found in your cloud account.
+                 </div>
+              )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 border-t border-slate-50 pt-10">
+            <p className="text-slate-400 font-bold text-sm">Or start fresh:</p>
+            <button
+              onClick={() => navigate('/')}
+              className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:bg-slate-800 transition-all active:scale-95 shadow-xl"
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span>Upload New Master Metadata</span>
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -101,8 +157,31 @@ const FacultyList = React.memo(() => {
             <p className="text-gray-400 mt-2 font-medium tracking-wide">Synthesized schedule overview for <span className="text-indigo-600 font-black">{facultyNames.length}</span> active members</p>
           </div>
           
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="relative flex-1 md:w-80">
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+            {/* Section Selector */}
+            <div className="relative flex-1 md:w-48">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <RefreshCw className="h-4 w-4 text-indigo-400" />
+              </div>
+              <select
+                className="block w-full pl-10 pr-10 py-3 text-sm border-0 border-r-8 border-transparent bg-white rounded-xl focus:ring-2 focus:ring-indigo-500/20 font-bold text-slate-700 shadow-sm appearance-none cursor-pointer"
+                value={selectedSection}
+                onChange={(e) => setSelectedSection(e.target.value)}
+              >
+                <option value="all">All Sessions</option>
+                {sections && sections.map(section => (
+                  <option key={section} value={section}>
+                    {section.replace('_', ' ').toUpperCase()}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <Sparkles className="h-4 w-4 text-indigo-300" />
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative flex-1 md:w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
               </div>
@@ -114,6 +193,7 @@ const FacultyList = React.memo(() => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+
             <button 
               onClick={handleReset}
               className="p-3 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm group"
